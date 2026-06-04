@@ -6,12 +6,22 @@ from farms.models import Farm
 
 class Produce(models.Model):
     class ProduceType(models.TextChoices):
-        BROILERS    = 'broilers',    'Broilers'
-        EGGS        = 'eggs',        'Eggs'
-        LAYERS      = 'layers',      'Layer Birds'
-        DAY_OLD     = 'day_old',     'Day-old Chicks'
-        SMOKED      = 'smoked',      'Smoked Chicken'
-        OTHER       = 'other',       'Other'
+        BROILERS       = 'broilers',       'Broilers'
+        EGGS           = 'eggs',           'Eggs'
+        LAYERS         = 'layers',         'Layer Birds'
+        DAY_OLD        = 'day_old',        'Day-old Chicks'
+        SMOKED         = 'smoked',         'Smoked Chicken'
+        GUINEA_FOWL    = 'guinea_fowl',    'Guinea Fowl'
+        TURKEY         = 'turkey',         'Turkey'
+        DUCK           = 'duck',           'Duck'
+        QUAIL          = 'quail',          'Quail'
+        OTHER          = 'other',          'Other'
+
+    class EggSize(models.TextChoices):
+        SMALL  = 'small',  'Small'
+        MEDIUM = 'medium', 'Medium'
+        LARGE  = 'large',  'Large'
+        JUMBO  = 'jumbo',  'Jumbo'
 
     class Unit(models.TextChoices):
         KG    = 'kg',    'Per KG'
@@ -36,6 +46,8 @@ class Produce(models.Model):
     unit         = models.CharField(max_length=10, choices=Unit.choices)
     quantity_available = models.DecimalField(max_digits=10, decimal_places=2)
     min_order    = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    egg_size     = models.CharField(max_length=10, choices=EggSize.choices, null=True, blank=True,
+                       help_text='Only applicable when produce_type is eggs')
     photo        = models.ImageField(upload_to='marketplace/produce/', null=True, blank=True)
     status       = models.CharField(max_length=20, choices=ListingStatus.choices, default=ListingStatus.ACTIVE)
     is_organic   = models.BooleanField(default=False)

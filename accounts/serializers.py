@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import User, FarmerProfile, InvestorProfile
+from .models import User, FarmerProfile, InvestorProfile, MonitoringOfficerProfile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -24,6 +24,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ['email','first_name','last_name','phone','role','password','password2','language']
 
+    def validate_role(self, value):
+        """Prevent self-service admin or monitoring officer account creation."""
+        if value in (User.Role.ADMIN, User.Role.MONITORING_OFFICER):
+            raise serializers.ValidationError(
+                'This account type cannot be created through self-registration. '
+                'Please contact the platform administrator.'
+            )
+        return value
+
     def validate(self, data):
         if data['password'] != data['password2']:
             raise serializers.ValidationError({'password': 'Passwords do not match.'})
@@ -31,6 +40,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('password2')
+        validated_data['is_active']   = False
+        validated_data['is_verified'] = False
         return User.objects.create_user(**validated_data)
 
 
@@ -50,6 +61,15 @@ class InvestorProfileSerializer(serializers.ModelSerializer):
         model = InvestorProfile
         fields = '__all__'
         read_only_fields = ['user', 'is_kyc_verified']
+
+
+class MonitoringOfficerProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = MonitoringOfficerProfile
+        fields = '__all__'
+        read_only_fields = ['user', 'created_at', 'updated_at']
 
 
 class ChangePasswordSerializer(serializers.Serializer):

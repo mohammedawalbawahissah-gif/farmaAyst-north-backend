@@ -5,9 +5,18 @@ from accounts.models import User
 
 class Farm(models.Model):
     class FlockType(models.TextChoices):
-        BROILERS = 'broilers', 'Broilers'
-        LAYERS   = 'layers',   'Layers'
-        MIXED    = 'mixed',    'Mixed'
+        BROILERS            = 'broilers',            'Broilers'
+        LAYERS              = 'layers',              'Layers'
+        GUINEA_FOWL         = 'guinea_fowl',         'Guinea Fowl'
+        TURKEY              = 'turkey',              'Turkey'
+        DUCK                = 'duck',                'Duck'
+        GEESE               = 'geese',               'Geese'
+        OSTRICH             = 'ostrich',             'Ostrich'
+        DAY_OLD_CHICKS      = 'day_old_chicks',      'Day-Old Chicks'
+        HATCHERY            = 'hatchery',            'Hatchery Only'
+        POULTRY_AND_HATCHERY = 'poultry_and_hatchery', 'Poultry + Hatchery'
+        MEAT_PROCESSING      = 'meat_processing',    'Meat Processing Farm'
+        MIXED               = 'mixed',               'Mixed Poultry'
 
     id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner        = models.ForeignKey(User, on_delete=models.CASCADE, related_name='farms')
@@ -40,7 +49,24 @@ class FarmActivityLog(models.Model):
     id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     farm         = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name='activity_logs')
     date         = models.DateField()
-    flock_count  = models.PositiveIntegerField()
+
+    # Split flock count by category — each defaults to 0 so existing rows stay valid
+    broiler_count         = models.PositiveIntegerField(default=0)
+    layer_count           = models.PositiveIntegerField(default=0)
+    guinea_fowl_count     = models.PositiveIntegerField(default=0)
+    turkey_count          = models.PositiveIntegerField(default=0)
+    duck_count            = models.PositiveIntegerField(default=0)
+    geese_count           = models.PositiveIntegerField(default=0)
+    ostrich_count         = models.PositiveIntegerField(default=0)
+    day_old_chick_count   = models.PositiveIntegerField(default=0)
+
+    # Keep flock_count as a computed convenience (total of all categories)
+    @property
+    def flock_count(self):
+        return (self.broiler_count + self.layer_count + self.guinea_fowl_count +
+                self.turkey_count + self.duck_count + self.geese_count +
+                self.ostrich_count + self.day_old_chick_count)
+
     mortality    = models.PositiveIntegerField(default=0)
     feed_kg      = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     eggs_collected = models.PositiveIntegerField(default=0)

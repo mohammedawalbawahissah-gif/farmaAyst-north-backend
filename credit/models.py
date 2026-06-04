@@ -37,6 +37,7 @@ class CreditApplication(models.Model):
     rejection_reason = models.TextField(blank=True)
     submitted_at     = models.DateTimeField(null=True, blank=True)
     reviewed_at      = models.DateTimeField(null=True, blank=True)
+    matched_investor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='matched_applications')
     approved_at      = models.DateTimeField(null=True, blank=True)
     created_at       = models.DateTimeField(auto_now_add=True)
     updated_at       = models.DateTimeField(auto_now=True)

@@ -21,6 +21,11 @@ class IsConsumer(BasePermission):
         return request.user.is_authenticated and request.user.role == 'consumer'
 
 
+class IsMonitoringOfficer(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'monitoring_officer'
+
+
 class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in ('GET', 'HEAD', 'OPTIONS'):
@@ -36,3 +41,8 @@ class IsFarmerOrAdmin(BasePermission):
 class IsInvestorOrAdmin(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role in ('investor', 'admin')
+
+
+class IsMonitoringOfficerOrAdmin(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role in ('monitoring_officer', 'admin')

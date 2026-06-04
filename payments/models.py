@@ -98,3 +98,41 @@ class Payment(models.Model):
             count = Payment.objects.count() + 1
             self.reference = f'PAY-{count:06d}'
         super().save(*args, **kwargs)
+
+
+class DisbursementRequest(models.Model):
+    """Investor-initiated request to disburse funds to a farmer after contract activation."""
+
+    class RequestStatus(models.TextChoices):
+        PENDING  = 'pending',  'Pending Admin Review'
+        APPROVED = 'approved', 'Approved'
+        REJECTED = 'rejected', 'Rejected'
+
+    id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    reference    = models.CharField(max_length=30, unique=True, blank=True)
+    agreement    = models.ForeignKey(
+        CreditAgreement, on_delete=models.CASCADE, related_name='disbursement_requests_set'
+    )
+    requested_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='disbursement_requests')
+    amount       = models.DecimalField(max_digits=12, decimal_places=2)
+    method       = models.CharField(max_length=20, choices=Disbursement.Method.choices, default=Disbursement.Method.MOMO)
+    note         = models.TextField(blank=True)
+    status       = models.CharField(max_length=20, choices=RequestStatus.choices, default=RequestStatus.PENDING)
+    reviewed_by  = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_requests')
+    reviewed_at  = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True)
+    disbursement = models.OneToOneField(
+        Disbursement, on_delete=models.SET_NULL, null=True, blank=True, related_name='request'
+    )
+    created_at   = models.DateTimeField(auto_now_add=True)
+    updated_at   = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'disbursement_requests'
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            count = DisbursementRequest.objects.count() + 1
+            self.reference = f'DR-{count:05d}'
+        super().save(*args, **kwargs)

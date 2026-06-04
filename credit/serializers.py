@@ -21,7 +21,7 @@ class CreditApplicationSerializer(serializers.ModelSerializer):
                   'amount_requested', 'repayment_period_months', 'purpose', 'input_details',
                   'status', 'credit_score_at_submission', 'reviewer', 'reviewer_notes',
                   'rejection_reason', 'submitted_at', 'reviewed_at', 'approved_at',
-                  'created_at', 'updated_at', 'documents']
+                  'matched_investor', 'created_at', 'updated_at', 'documents']
         read_only_fields = ['id', 'reference', 'farmer', 'status', 'credit_score_at_submission',
                             'reviewer', 'reviewer_notes', 'rejection_reason',
                             'submitted_at', 'reviewed_at', 'approved_at', 'created_at', 'updated_at']
