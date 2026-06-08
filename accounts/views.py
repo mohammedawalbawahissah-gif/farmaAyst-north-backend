@@ -142,7 +142,9 @@ class FarmerProfileListView(generics.ListAPIView):
 
 
 class FarmerProfileDetailView(generics.RetrieveAPIView):
-    """Single farmer profile — readable by investors and admins."""
+    """Single farmer profile — readable by investors and admins.
+    Supports both /profiles/farmers/<int:pk>/ and /profiles/farmers/<uuid:user_id>/
+    """
     serializer_class = FarmerProfileSerializer
     permission_classes = [IsAuthenticated]
 
@@ -153,6 +155,20 @@ class FarmerProfileDetailView(generics.RetrieveAPIView):
         return FarmerProfile.objects.select_related('user').filter(
             user__is_active=True, user__is_verified=True
         )
+
+    def get_object(self):
+        # Support lookup by profile pk (int) OR by user UUID
+        lookup = self.kwargs.get('pk') or self.kwargs.get('user_id')
+        qs = self.get_queryset()
+        # Try integer pk first
+        try:
+            int(str(lookup))
+            obj = qs.get(pk=lookup)
+        except (ValueError, TypeError):
+            # It's a UUID — look up by user id
+            obj = qs.get(user__id=lookup)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class InvestorProfileListView(generics.ListAPIView):

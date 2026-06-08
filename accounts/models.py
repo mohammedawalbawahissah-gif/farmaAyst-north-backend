@@ -22,18 +22,20 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     class Role(models.TextChoices):
-        FARMER              = 'farmer',             'Farmer'
-        INVESTOR            = 'investor',           'Investor'
-        CONSUMER            = 'consumer',           'Consumer'
-        ADMIN               = 'admin',              'Admin'
-        MONITORING_OFFICER  = 'monitoring_officer', 'Monitoring Officer'
+        FARMER             = 'farmer',             'Farmer'
+        INVESTOR           = 'investor',           'Investor'
+        CONSUMER           = 'consumer',           'Consumer'
+        MONITORING_OFFICER = 'monitoring_officer', 'Monitoring Officer'
+        ADMIN              = 'admin',              'Admin'
+        VET                = 'vet',                'Veterinarian'
+        INPUT_DEALER       = 'input_dealer',       'Input Dealer'
 
     id            = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email         = models.EmailField(unique=True)
     first_name    = models.CharField(max_length=100)
     last_name     = models.CharField(max_length=100)
     phone         = models.CharField(max_length=20, blank=True)
-    role          = models.CharField(max_length=30, choices=Role.choices, default=Role.FARMER)
+    role          = models.CharField(max_length=20, choices=Role.choices, default=Role.FARMER)
     is_active     = models.BooleanField(default=True)
     is_staff      = models.BooleanField(default=False)
     is_verified   = models.BooleanField(default=False)
@@ -59,7 +61,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class FarmerProfile(models.Model):
-    """Extended profile for farmer users."""
     class VerificationStatus(models.TextChoices):
         PENDING   = 'pending',   'Pending'
         SUBMITTED = 'submitted', 'Submitted'
@@ -113,22 +114,3 @@ class InvestorProfile(models.Model):
 
     def __str__(self):
         return f'{self.organisation} ({self.investor_type})'
-
-
-class MonitoringOfficerProfile(models.Model):
-    """Extended profile for monitoring officer users."""
-    user           = models.OneToOneField(User, on_delete=models.CASCADE, related_name='monitoring_profile')
-    employee_id    = models.CharField(max_length=50, blank=True)
-    assigned_region = models.CharField(max_length=100, blank=True)
-    assigned_districts = models.JSONField(default=list, help_text='List of district names this officer covers')
-    ghana_card_number = models.CharField(max_length=50, blank=True)
-    date_of_hire   = models.DateField(null=True, blank=True)
-    notes          = models.TextField(blank=True)
-    created_at     = models.DateTimeField(auto_now_add=True)
-    updated_at     = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'monitoring_officer_profiles'
-
-    def __str__(self):
-        return f'MonitoringOfficer: {self.user.get_full_name()} ({self.assigned_region})'

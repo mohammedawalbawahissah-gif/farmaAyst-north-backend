@@ -26,6 +26,24 @@ class IsMonitoringOfficer(BasePermission):
         return request.user.is_authenticated and request.user.role == 'monitoring_officer'
 
 
+class IsVet(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'vet'
+
+
+class IsInputDealer(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'input_dealer'
+
+
+class IsAdminOrMonitoringOfficer(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role in ('admin', 'monitoring_officer')
+
+
+IsMonitoringOfficerOrAdmin = IsAdminOrMonitoringOfficer
+
+
 class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in ('GET', 'HEAD', 'OPTIONS'):
@@ -41,8 +59,3 @@ class IsFarmerOrAdmin(BasePermission):
 class IsInvestorOrAdmin(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role in ('investor', 'admin')
-
-
-class IsMonitoringOfficerOrAdmin(BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role in ('monitoring_officer', 'admin')

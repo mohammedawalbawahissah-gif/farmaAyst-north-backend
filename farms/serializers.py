@@ -4,11 +4,17 @@ from .models import Farm, FarmActivityLog, FarmAuditReport
 
 class FarmSerializer(serializers.ModelSerializer):
     owner_name = serializers.CharField(source='owner.get_full_name', read_only=True)
+    monitoring_officer_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Farm
         fields = '__all__'
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_monitoring_officer_name(self, obj):
+        if obj.monitoring_officer:
+            return obj.monitoring_officer.get_full_name()
+        return None
 
 
 class FarmActivityLogSerializer(serializers.ModelSerializer):

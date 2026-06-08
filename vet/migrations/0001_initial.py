@@ -1,0 +1,74 @@
+import uuid
+import django.db.models.deletion
+from django.conf import settings
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    initial = True
+
+    dependencies = [
+        ('farms', '0007_farmactivitylog_hatchery_processing_fields'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='VetProfile',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('license_number', models.CharField(max_length=50, unique=True)),
+                ('specialisation', models.CharField(blank=True, max_length=200)),
+                ('clinic_name', models.CharField(max_length=200)),
+                ('region', models.CharField(blank=True, max_length=100)),
+                ('district', models.CharField(blank=True, max_length=100)),
+                ('phone', models.CharField(blank=True, max_length=20)),
+                ('is_available', models.BooleanField(default=True)),
+                ('consultation_fee', models.DecimalField(decimal_places=2, default=0, max_digits=10)),
+                ('services_offered', models.TextField(blank=True)),
+                ('approval_status', models.CharField(choices=[('pending','Pending'),('approved','Approved'),('suspended','Suspended')], default='pending', max_length=10)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('approved_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='approved_vets', to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='vet_profile', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={'db_table': 'vet_profiles'},
+        ),
+        migrations.CreateModel(
+            name='VetService',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('service_name', models.CharField(max_length=200)),
+                ('service_type', models.CharField(choices=[('vaccination','Vaccination'),('diagnosis','Diagnosis'),('treatment','Treatment'),('consultation','Consultation'),('farm_visit','Farm Visit'),('other','Other')], max_length=20)),
+                ('description', models.TextField(blank=True)),
+                ('price', models.DecimalField(decimal_places=2, max_digits=10)),
+                ('duration_minutes', models.PositiveIntegerField(default=30)),
+                ('is_mobile', models.BooleanField(default=False)),
+                ('region', models.CharField(blank=True, max_length=100)),
+                ('is_active', models.BooleanField(default=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('vet', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='vet_services', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={'db_table': 'vet_services', 'ordering': ['service_name']},
+        ),
+        migrations.CreateModel(
+            name='VetBooking',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('reference', models.CharField(blank=True, max_length=20, unique=True)),
+                ('booking_date', models.DateTimeField()),
+                ('visit_type', models.CharField(choices=[('on_farm','On Farm'),('clinic','Clinic'),('telemedicine','Telemedicine')], default='on_farm', max_length=15)),
+                ('issue_description', models.TextField()),
+                ('status', models.CharField(choices=[('pending','Pending'),('confirmed','Confirmed'),('completed','Completed'),('cancelled','Cancelled')], default='pending', max_length=10)),
+                ('fee', models.DecimalField(decimal_places=2, default=0, max_digits=10)),
+                ('vet_notes', models.TextField(blank=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('farm', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='farms.farm')),
+                ('farmer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='vet_bookings', to=settings.AUTH_USER_MODEL)),
+                ('service', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='vet.vetservice')),
+                ('vet', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='vet_appointments', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={'db_table': 'vet_bookings', 'ordering': ['-created_at']},
+        ),
+    ]

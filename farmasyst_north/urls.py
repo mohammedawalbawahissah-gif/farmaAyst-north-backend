@@ -18,6 +18,8 @@ from notifications.views import NotificationViewSet
 from payments.views import (RepaymentScheduleViewSet, InitiateRepaymentView,
                              PaystackWebhookView, DisbursementViewSet,
                              DisbursementRequestViewSet, PayFullBalanceView)
+from vet.views import VetProfileViewSet, VetServiceViewSet, VetBookingViewSet
+from inputs.views import InputDealerProfileViewSet, FarmInputViewSet
 
 router = DefaultRouter()
 router.register(r'users',               UserViewSet,              basename='users')
@@ -35,6 +37,11 @@ router.register(r'notifications',       NotificationViewSet,      basename='noti
 router.register(r'payments/schedules',  RepaymentScheduleViewSet, basename='repayment-schedules')
 router.register(r'payments/disbursements', DisbursementViewSet,   basename='disbursements')
 router.register(r'payments/disbursement-requests', DisbursementRequestViewSet, basename='disbursement-requests')
+router.register(r'vet/profiles', VetProfileViewSet, basename='vet-profiles')
+router.register(r'vet/services', VetServiceViewSet, basename='vet-services')
+router.register(r'vet/bookings', VetBookingViewSet, basename='vet-bookings')
+router.register(r'inputs/dealers',  InputDealerProfileViewSet, basename='input-dealers')
+router.register(r'inputs/listings', FarmInputViewSet,           basename='farm-inputs')
 
 urlpatterns = [
     path('admin/',                         admin.site.urls),
@@ -52,6 +59,7 @@ urlpatterns = [
     path('api/v1/profiles/farmer/',         FarmerProfileView.as_view()),
     path('api/v1/profiles/farmers/',          FarmerProfileListView.as_view()),
     path('api/v1/profiles/farmers/<int:pk>/', FarmerProfileDetailView.as_view()),
+    path('api/v1/profiles/farmers/<uuid:user_id>/', FarmerProfileDetailView.as_view()),
     path('api/v1/profiles/investor/',       InvestorProfileView.as_view()),
     path('api/v1/profiles/investors/',      InvestorProfileListView.as_view()),
 

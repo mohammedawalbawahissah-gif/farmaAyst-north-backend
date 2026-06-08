@@ -32,6 +32,11 @@ class Farm(models.Model):
     has_electricity  = models.BooleanField(default=False)
     registration_cert = models.FileField(upload_to='farms/certs/', null=True, blank=True)
     farm_photo   = models.ImageField(upload_to='farms/photos/', null=True, blank=True)
+    monitoring_officer = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='assigned_farms',
+        limit_choices_to={'role': 'monitoring_officer'},
+    )
     is_active    = models.BooleanField(default=True)
     created_at   = models.DateTimeField(auto_now_add=True)
     updated_at   = models.DateTimeField(auto_now=True)
@@ -59,6 +64,20 @@ class FarmActivityLog(models.Model):
     geese_count           = models.PositiveIntegerField(default=0)
     ostrich_count         = models.PositiveIntegerField(default=0)
     day_old_chick_count   = models.PositiveIntegerField(default=0)
+
+    # Hatchery-specific fields
+    eggs_in_incubation    = models.PositiveIntegerField(default=0, help_text='Number of eggs currently in incubator')
+    eggs_set_today        = models.PositiveIntegerField(default=0, help_text='Eggs placed in incubator today')
+    chicks_hatched        = models.PositiveIntegerField(default=0, help_text='Chicks successfully hatched today')
+    hatch_rejects         = models.PositiveIntegerField(default=0, help_text='Unhatched / infertile eggs removed')
+    chicks_sold           = models.PositiveIntegerField(default=0, help_text='Day-old chicks sold/dispatched today')
+
+    # Meat processing-specific fields
+    birds_received        = models.PositiveIntegerField(default=0, help_text='Live birds received for processing')
+    birds_processed       = models.PositiveIntegerField(default=0, help_text='Birds processed/slaughtered today')
+    carcass_weight_kg     = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text='Total dressed carcass weight (kg)')
+    units_packaged        = models.PositiveIntegerField(default=0, help_text='Packaged units (portions, whole birds, etc.)')
+    cold_storage_units    = models.PositiveIntegerField(default=0, help_text='Units moved to cold storage')
 
     # Keep flock_count as a computed convenience (total of all categories)
     @property

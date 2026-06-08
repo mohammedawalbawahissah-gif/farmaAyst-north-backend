@@ -50,6 +50,13 @@ class Produce(models.Model):
                        help_text='Only applicable when produce_type is eggs')
     photo        = models.ImageField(upload_to='marketplace/produce/', null=True, blank=True)
     status       = models.CharField(max_length=20, choices=ListingStatus.choices, default=ListingStatus.ACTIVE)
+    # Seller contact & payment preferences
+    contact_phone       = models.CharField(max_length=20, blank=True, help_text='Phone number buyers can reach the seller on')
+    accepts_momo        = models.BooleanField(default=True,  help_text='Accept MTN Mobile Money')
+    accepts_card        = models.BooleanField(default=False, help_text='Accept Card via Paystack')
+    accepts_bank_transfer = models.BooleanField(default=False, help_text='Accept Bank Transfer')
+    accepts_cod         = models.BooleanField(default=True,  help_text='Accept Cash on Delivery')
+
     is_organic   = models.BooleanField(default=False)
     avg_rating   = models.DecimalField(max_digits=3, decimal_places=2, default=0)
     total_orders = models.PositiveIntegerField(default=0)
@@ -78,6 +85,12 @@ class Order(models.Model):
         PICKUP   = 'pickup',   'Farm Pickup'
         DELIVERY = 'delivery', 'Home Delivery'
 
+    class PaymentMethod(models.TextChoices):
+        MOMO             = 'momo',             'MTN Mobile Money'
+        CARD             = 'card',             'Card (Paystack)'
+        BANK_TRANSFER    = 'bank_transfer',    'Bank Transfer'
+        CASH_ON_DELIVERY = 'cash_on_delivery', 'Cash on Delivery'
+
     id            = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     reference     = models.CharField(max_length=20, unique=True, blank=True)
     buyer         = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
@@ -85,6 +98,7 @@ class Order(models.Model):
     delivery_type = models.CharField(max_length=20, choices=DeliveryType.choices, default=DeliveryType.PICKUP)
     delivery_address = models.TextField(blank=True)
     delivery_date = models.DateField(null=True, blank=True)
+    payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH_ON_DELIVERY)
     total_amount  = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     notes         = models.TextField(blank=True)
     created_at    = models.DateTimeField(auto_now_add=True)

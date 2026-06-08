@@ -1,5 +1,7 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Farm, FarmActivityLog, FarmAuditReport
 from .serializers import FarmSerializer, FarmActivityLogSerializer, FarmAuditReportSerializer
@@ -44,6 +46,51 @@ class FarmViewSet(viewsets.ModelViewSet):
             serializer.save(owner=owner)
         else:
             serializer.save(owner=user)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin], url_path='assign_officer')
+    def assign_officer(self, request, pk=None):
+        """Assign or unassign a monitoring officer to/from a farm."""
+        farm = self.get_object()
+        officer_id = request.data.get('officer_id')
+        if not officer_id:
+            # Unassign
+            farm.monitoring_officer = None
+            farm.save(update_fields=['monitoring_officer'])
+            return Response({'detail': 'Officer unassigned.', 'farm_id': str(farm.id)}, status=status.HTTP_200_OK)
+        from accounts.models import User as UserModel
+        try:
+            officer = UserModel.objects.get(id=officer_id, role='monitoring_officer')
+        except UserModel.DoesNotExist:
+            return Response({'detail': 'No monitoring officer found with that ID.'}, status=status.HTTP_404_NOT_FOUND)
+        farm.monitoring_officer = officer
+        farm.save(update_fields=['monitoring_officer'])
+        return Response({
+            'detail': 'Officer assigned successfully.',
+            'farm_id': str(farm.id),
+            'officer_id': str(officer.id),
+            'officer_name': officer.get_full_name(),
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin], url_path='request_report')
+    def request_report(self, request, pk=None):
+        """Send a notification to the assigned monitoring officer requesting an audit report."""
+        farm = self.get_object()
+        if not farm.monitoring_officer:
+            return Response({'detail': 'No officer is assigned to this farm.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            from notifications.utils import create_notification
+            create_notification(
+                user=farm.monitoring_officer,
+                title='Audit Report Requested',
+                message=f'Admin has requested an audit report for {farm.name}. Please submit your field report at your earliest convenience.',
+                notification_type='action_required',
+            )
+        except Exception:
+            pass  # Notification failure should not block the response
+        return Response({
+            'detail': f'Report request sent to {farm.monitoring_officer.get_full_name()}.',
+            'farm_id': str(farm.id),
+        }, status=status.HTTP_200_OK)
 
 
 class FarmActivityLogViewSet(viewsets.ModelViewSet):

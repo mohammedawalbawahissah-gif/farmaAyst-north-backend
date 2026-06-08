@@ -12,22 +12,42 @@ class ProduceSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'seller', 'avg_rating', 'total_orders', 'created_at', 'updated_at']
 
 
+class OrderItemWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = OrderItem
+        fields = ['produce', 'quantity', 'unit_price']
+
+
 class OrderItemSerializer(serializers.ModelSerializer):
     produce_name = serializers.CharField(source='produce.name', read_only=True)
 
     class Meta:
-        model = OrderItem
+        model  = OrderItem
         fields = ['id', 'produce', 'produce_name', 'quantity', 'unit_price', 'subtotal']
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    items       = OrderItemSerializer(many=True, read_only=True)
-    buyer_name  = serializers.CharField(source='buyer.get_full_name', read_only=True)
+    items      = OrderItemSerializer(many=True, read_only=True)
+    items_data = OrderItemWriteSerializer(many=True, write_only=True, source='items')
+    buyer_name = serializers.CharField(source='buyer.get_full_name', read_only=True)
 
     class Meta:
-        model = Order
+        model  = Order
         fields = '__all__'
         read_only_fields = ['id', 'reference', 'buyer', 'total_amount', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items', [])
+        order      = Order.objects.create(**validated_data)
+        total      = 0
+        for item in items_data:
+            qty        = item['quantity']
+            price      = item['unit_price']
+            OrderItem.objects.create(order=order, **item)
+            total += float(qty) * float(price)
+        order.total_amount = total
+        order.save()
+        return order
 
 
 class ProduceReviewSerializer(serializers.ModelSerializer):

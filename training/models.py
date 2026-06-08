@@ -5,13 +5,10 @@ from accounts.models import User
 
 class TrainingModule(models.Model):
     class ModuleType(models.TextChoices):
-        VIDEO    = 'video',    'Video'
-        PDF      = 'pdf',      'PDF Guide'
-        AUDIO    = 'audio',    'Audio'
-        DOCUMENT = 'document', 'Document'
-        WEBINAR  = 'webinar',  'Live Webinar'
-        WORKSHOP = 'workshop', 'Workshop'
-        QUIZ     = 'quiz',     'Quiz'
+        VIDEO   = 'video',   'Video'
+        PDF     = 'pdf',     'PDF Guide'
+        WEBINAR = 'webinar', 'Webinar Recording'
+        QUIZ    = 'quiz',    'Quiz'
 
     class Level(models.TextChoices):
         BEGINNER     = 'beginner',     'Beginner'
@@ -20,17 +17,12 @@ class TrainingModule(models.Model):
 
     id           = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title        = models.CharField(max_length=300)
-    description  = models.TextField()
+    description  = models.TextField(blank=True, default='')
     module_type  = models.CharField(max_length=20, choices=ModuleType.choices)
     level        = models.CharField(max_length=20, choices=Level.choices, default=Level.BEGINNER)
     topic_tags   = models.JSONField(default=list)  # ['biosecurity','nutrition','records']
     file         = models.FileField(upload_to='training/files/', null=True, blank=True)
     video_url    = models.URLField(blank=True)
-    # Webinar / workshop scheduling
-    scheduled_at     = models.DateTimeField(null=True, blank=True, help_text='Date & time for live webinar/workshop')
-    meeting_url      = models.URLField(blank=True, help_text='Google Meet or Zoom link')
-    meeting_platform = models.CharField(max_length=20, blank=True,
-                           choices=[('google_meet','Google Meet'),('zoom','Zoom'),('other','Other')])
     duration_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
     is_published = models.BooleanField(default=False)
     is_free      = models.BooleanField(default=True)
